@@ -6,8 +6,10 @@
 
 ## Team
 
-- Team:
+- Team:A3
 - Members:
+Nguyễn Thị Lý- 2A202601962
+
 - Provider/model:
 
 ---
