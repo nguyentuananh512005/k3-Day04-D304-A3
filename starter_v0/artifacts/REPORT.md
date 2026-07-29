@@ -9,6 +9,7 @@
   - **Đỗ Hùng Anh (2A202601175)**: Phụ trách Thiết kế 10 Benchmark Team Eval Cases (`data/eval_group.json`), Tối ưu hóa Prompt & Tools Declaration (`v0` -> `v3`), Chạy `run_eval.py` & Log `version_log.csv`.
 - **Provider/model**: Groq / `llama-3.1-8b-instant`
 
+
 ---
 
 # PHẦN A — Giới thiệu agent

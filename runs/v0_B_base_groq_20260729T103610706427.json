@@ -1,0 +1,1572 @@
+{
+  "run_id": "v0_B_base_groq_20260729T103610706427",
+  "version": "v0",
+  "artifact_version": "v0+peb1c8179815b+t6cdb53d5d7b8",
+  "prompt_hash": "eb1c8179815bd79d34de7d326420bb99b3072e6e8ae96464c02d4411f905fc68",
+  "tools_hash": "6cdb53d5d7b8de80d60b298b1357f462cedbedfae261d5ba60b08ccc401687c5",
+  "phase": "B",
+  "suite": "base",
+  "provider": "groq",
+  "model": "llama-3.1-8b-instant",
+  "system_prompt": "C:\\Users\\Admin\\Desktop\\lab\\k3-Day04-D304-A3\\starter_v0\\artifacts\\system_prompt.md",
+  "tools": "C:\\Users\\Admin\\Desktop\\lab\\k3-Day04-D304-A3\\starter_v0\\artifacts\\tools.yaml",
+  "eval_cases": "data\\eval_base.json",
+  "dataset_id": "day04_v2_research_base",
+  "dataset_role": "base",
+  "description": "Core eval cho research agent: routing đúng tool + đúng args, hỏi lại khi thiếu (ask_user), xác nhận trước khi gửi, và xử lý câu ngoài phạm vi / không cần tool. Chấm trên tool_calls + args (subset). KHÔNG sửa file này — chỉ thêm case vào eval_group.json.",
+  "generated_at": "2026-07-29T10:36:10",
+  "summary": {
+    "total_cases": 20,
+    "measured_cases": 19,
+    "provider_error_cases": 1,
+    "passed_cases": 6,
+    "case_accuracy": 0.3158,
+    "tool_routing_accuracy": 0.5789,
+    "argument_accuracy": 0.3158,
+    "multiturn_accuracy": 0.5,
+    "failure_counts": {
+      "wrong_tool": 4,
+      "wrong_arg_value": 4,
+      "out_of_scope": 2,
+      "missing_info": 2,
+      "wrong_boundary": 1
+    },
+    "observed_mismatch_counts": {
+      "wrong_arg_value": 5,
+      "missing_tool_call": 6,
+      "unexpected_tool_call": 2
+    }
+  },
+  "results": [
+    {
+      "id": "R01_user_tweets_routing",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "routing_user_tweets_name_to_handle",
+        "difficulty": "medium",
+        "what_it_tests": "Tin CỦA một người nổi tiếng → map tên Sam Altman thành handle sama rồi gọi get_user_tweets."
+      },
+      "input": "Tweet mới nhất của Sam Altman là gì?",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "screenname": "sama"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": true,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "limit": 1,
+              "screenname": "SamAltman"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": "wrong_arg_value",
+        "failure_type": "wrong_tool",
+        "failures": [
+          "screenname: expected 'sama', got 'SamAltman'"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "timeline",
+          "args": {
+            "limit": 1,
+            "screenname": "SamAltman"
+          },
+          "result": {
+            "tool": "get_user_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/timeline.php?screenname=SamAltman"
+          }
+        }
+      ]
+    },
+    {
+      "id": "R02_search_tweets_routing",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "routing_search_tweets",
+        "difficulty": "easy",
+        "what_it_tests": "Tweet theo CHỦ ĐỀ → search_tweets, không phải get_user_tweets."
+      },
+      "input": "Mọi người đang bàn gì về GPT-5 trên Twitter?",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "social_search",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": false,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "limit": 10,
+              "screenname": "SamAltman"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": "missing_tool_call",
+        "failure_type": "wrong_tool",
+        "failures": [
+          "missing tool call social_search",
+          "extra tool call timeline"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "timeline",
+          "args": {
+            "limit": 10,
+            "screenname": "SamAltman"
+          },
+          "result": {
+            "tool": "get_user_tweets",
+            "error": "HTTPError",
+            "message": "429 Client Error: Too Many Requests for url: https://twitter-api45.p.rapidapi.com/timeline.php?screenname=SamAltman"
+          }
+        }
+      ]
+    },
+    {
+      "id": "R03_web_news_routing",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "routing_web_news",
+        "difficulty": "medium",
+        "what_it_tests": "Tin thời sự trên web → web_search topic=news, timeframe=day (hôm nay)."
+      },
+      "input": "Tin tức AI hôm nay có gì nổi bật?",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "AI",
+              "topic": "news",
+              "timeframe": "day"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": true,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "tin tức AI hôm nay",
+              "timeframe": "day",
+              "topic": "news"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": "wrong_arg_value",
+        "failure_type": "wrong_tool",
+        "failures": [
+          "query: expected 'AI', got 'tin tức AI hôm nay'"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "tin tức AI hôm nay",
+            "timeframe": "day",
+            "topic": "news"
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "tin tức AI hôm nay",
+            "topic": "news",
+            "timeframe": "day",
+            "items": [
+              {
+                "title": "Điểm tin thị trường hôm nay: Vốn hóa Apple lần đầu vượt mốc 5 nghìn tỷ USD, lợi nhuận Q2 của SK Hynix tăng vọt 557%",
+                "url": "https://www.tradingkey.com/vn/analysis/stocks/chung-khoan-my/262059792-us-oil-apple-skhy-nvda-skhynix-q2-tradingkey",
+                "source": "tradingkey.com",
+                "summary": "Amazon （AMZN） đang cải tổ toàn diện chiến lược AI của mình, loại bỏ hầu hết các mô hình chủ lực và đặt cược vào Nghiên cứu Mô hình Tiên phong (FMR). Theo các báo cáo truyền thông, Amazon đang tiến hành cải tổ toàn diện chiến lược AI của mình, loại bỏ dần hầu hết các mô hình nội bộ, tái cấu trúc các đội ngũ và hướng các kỹ sư tập trung vào một chiến lược mới nhằm tiên phong trong các lĩnh vực tiên tiến — Nghiên cứu Mô hình Tiên phong (FMR). Các nguồn tin thn cận tiết lộ rằng Amazon đang khai tử [...] tradingkey.logo\n\nTìm kiếm\n\nThị trường\n\nDanh sách theo dõi\n\nTin tức\n\nPhn tích\n\nCông cụ\n\nMáy quét cổ phiếu\n\n\n\nQuét để Tải xuống\n\nMột điểm số quyền lực. Quyết định đầu tư thông minh hơn.\n\n\n\nTradingKey\n\nTác giảJay Qian\n\n29 Th07 2026 00:54\n\nPodcast AI\n\nfacebooktwitterlinkedin\n\nXem tất cả bình luận（0）\n\n [...] Apple có kế hoạch thm nhập thị trường nhà thông minh toàn cầu, lấy trợ lý AI Siri làm cốt lõi. Một đối thủ nặng ký đang bước vào đấu trường nhà thông minh. Nhà phn tích Mark Gurman của Apple báo cáo rằng Apple đang chuẩn bị cho một đợt thúc đẩy mạnh mẽ vào thị trường nhà thông minh toàn cầu, với thiết bị trung tm nhà thông minh được xy dựng xoay quanh trợ lý AI Siri hoàn toàn mới làm cốt lõi. Theo các nguồn tin thn cận, Apple cũng lên kế hoạch phát hành một đầu thu truyền hình TV mới và một loa",
+                "score": 0.6455898
+              },
+              {
+                "title": "Chốt phiên chứng khoán Mỹ: Dow Jones tăng 500 điểm, Chỉ số Bán dẫn Philadelphia giảm hơn 4%; Cổ phiếu bộ nhớ, truyền thông quang học nới rộng đà giảm, nhóm cổ phiếu phần mềm hồi phục; Apple chạm mốc vốn hóa 5 nghìn tỷ USD, SanDisk giảm xu",
+                "url": "https://www.tradingkey.com/vn/analysis/stocks/chung-khoan-my/262059554-us-stock-dow-500-apple-5-trillion-market-cap-sox-4-percent-sandisk-below-1100-tradingkey",
+                "source": "tradingkey.com",
+                "summary": "Các cổ phiếu chip nhớ tiếp tục nới rộng đà giảm, trong đó SanDisk (SNDK) giảm 14,25%, SK Hynix (SKHY) giảm 8,98%, Micron Technology (MU) giảm 8,85%, Seagate Technology (STX) giảm 8,53% và Western Digital (WDC) giảm 6,91%.\n\n## Tin tức Doanh nghiệp\n\nAmazon cải tổ chiến lược AI, tập trung vào Nghiên cứu Mô hình Tiên phong (FMR) [...] tradingkey.logo\n\nTìm kiếm\n\nThị trường\n\nDanh sách theo dõi\n\nTin tức\n\nPhn tích\n\nCông cụ\n\nMáy quét cổ phiếu\n\n\n\nQuét để Tải xuống\n\nMột điểm số quyền lực. Quyết định đầu tư thông minh hơn.\n\n\n\nTradingKey\n\nTác giảAndy Chen\n\n28 Th07 2026 20:11\n\nPodcast AI\n\nfacebooktwitterlinkedin\n\nXem tất cả bình luận（0）\n\n [...] CEO Nvidia Jensen Huang tuyên bố rằng các mô hình trí tuệ nhn tạo trọng số mở có vai trò quan trọng trong việc thúc đẩy ngành công nghiệp AI, vốn vẫn đang ở giai đoạn phát triển ban đầu. Sau cuộc gặp với các nhà lập pháp Mỹ tại Washington vào thứ Ba, ông Huang cho biết các mô hình trọng số mở rất quan trọng để đảm bảo trí tuệ nhn tạo được ứng dụng một cách an toàn và đáng tin cậy trong toàn bộ nền kinh tế. Phát biểu ngắn gọn với các phóng viên, ông Huang nói: \"Đối với các ngành công nghiệp Mỹ,",
+                "score": 0.5510187
+              },
+              {
+                "title": "Tân Chủ tịch nước, Thủ tướng tuyên thệ nhậm chức hôm nay",
+                "url": "https://hatinh.gov.vn/vi/bai-viet/tan-chu-tich-nuoc-thu-tuong-tuyen-the-nham-chuc-hom-nay",
+                "source": "hatinh.gov.vn",
+                "summary": "24/07/2026\n\nCấm nhập khẩu thuốc lá điện tử và hàng hóa từ lao động cưỡng bức\n\n#### Cấm nhập khẩu thuốc lá điện tử và hàng hóa từ lao động cưỡng bức\n\n24/07/2026\n\nÁp thấp nhiệt đới có khả năng mạnh lên thành bão trong 24 giờ tới\n\n#### Áp thấp nhiệt đới có khả năng mạnh lên thành bão trong 24 giờ tới\n\n23/07/2026\n\nHà Nội nghiên cứu mô hình khu dịch vụ giải trí đêm có kiểm soát\n\n#### Hà Nội nghiên cứu mô hình khu dịch vụ giải trí đêm có kiểm soát\n\n23/07/2026\n\nHà Tĩnh\n\n## Hỏi đáp AI [...] ## Hỏi đáp AI\n\nTra cứu tin bài và văn bản",
+                "score": 0.5463757
+              },
+              {
+                "title": "Đổi mới đào tạo giáo viên để thích ứng với kỷ nguyên AI",
+                "url": "https://moet.gov.vn/tin-tuc/tin-tong-hop2/doi-moi-dao-tao-giao-vien-de-thich-ung-voi-ky-nguyen-ai.html?menuId=Article.DraftText&categoryId=15164900",
+                "source": "moet.gov.vn",
+                "summary": "Thứ ba, 28/07/2026 | 19:46\n\nA-; \"Nhỏ\") A; \"Bình thường\") A+; \"Lớn\")  |    Tăng tương phản; \"Tăng tương phản\") Giảm tương phản; \"Giảm tương phản\")\n\n# Đổi mới đào tạo giáo viên để thích ứng với kỷ nguyên AI\n\nSáng 28/7, tại Trường Đại học Sư phạm Hà Nội, Bộ Giáo dục và Đào tạo (GDĐT) tổ chức Hội thảo \"Đổi mới đào tạo giáo viên gắn với trí tuệ nhn tạo\". Thứ trưởng Bộ GDĐT Lê Qun chủ trì hội thảo. [...] Logo\n\n Sơ đồ cổng\n RSS\n Liên hệ\n Đăng nhập\n Tiếng Việt \"Tiếng Việt\")\n Tiếng Anh \"Tiếng Anh\")\n\n1. Trang chủ\n2. Tin tức\n3. Tin tổng hợp\n\nTin tức\n\n #### Thông cáo báo chí\n #### Hoạt động của Đảng bộ Bộ GDĐT\n #### Tin tổng hợp\n #### Tin video\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n### Video hoạt động Video hoạt động\n\nThứ trưởng Phạm Quang Hưng làm việc với Tập đoàn Google\n\nĐịnh hướng thực hiện chương trình giáo dục trung học nghề\n\nBản tin Giáo dục số 13 - Năm 2026\n\n### Liên kết website Liên kết website",
+                "score": 0.528753
+              },
+              {
+                "title": "Cramer nhận thấy dấu hiệu bong bóng dot-com khi phố Wall rút khỏi cổ phiếu AI để tìm sự an toàn",
+                "url": "https://vn.beincrypto.com/cramer-warns-ai-stocks-dot-com",
+                "source": "vn.beincrypto.com",
+                "summary": "Thời điểm hiện tại khá nhạy cảm. Seagate vừa công bố kết quả kinh doanh vượt kỳ vọng sau phiên giao dịch ngày thứ Ba. Cục Dự trữ Liên bang Mỹ cũng sẽ công bố quyết định về lãi suất trong ngày hôm nay. Cả hai sự kiện lớn này đều có thể ảnh hưởng đến nhóm cổ phiếu trung tâm dữ liệu. Trong thời gian tới, nhà đầu tư sẽ nhận thấy liệu nhóm này có ổn định trở lại, hay dòng tiền sẽ tiếp tục đổ về các cổ phiếu mà Cramer cho là “có vẻ nhàm chán nhưng an toàn”. [...] Làn sóng giảm giá mạnh nhất lại diễn ra ở thị trường châu Á. Chỉ số KOSPI Hàn Quốc đã mất hơn 10% trong tuần này. SK Hynix và Samsung Electronics đồng loạt giảm theo các đối thủ Mỹ. Những khó khăn trong chuỗi cung ứng AI đang là nguyên nhân lớn khiến thị trường rơi vào trạng thái “gấu”.\n\n## Cramer gọi đó là sự mở rộng, không phải sụp đổ [...] Xu hướng này phản ánh trực tiếp trên bảng điện. Giá các cổ phiếu Coca-Cola, PepsiCo và Walmart đều tăng mạnh. Chỉ số Dow Jones Industrial Average tăng trong khi Nasdaq Composite lại đi xuống. Nhà quản lý quỹ Steve Eisman cũng đã chỉ ra sự phân hóa này và cảnh báo thị trường ngày nay đang vận hành như một “kèo AI” tập trung duy nhất.",
+                "score": 0.50329643
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R04_read_url_routing",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "routing_read_url",
+        "difficulty": "easy",
+        "what_it_tests": "Đã có link cụ thể → read_url, không phải web_search."
+      },
+      "input": "Tóm tắt bài này giúp mình: https://openai.com/blog/gpt-5",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "fetch",
+            "args": {
+              "url": "https://openai.com/blog/gpt-5"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "fetch",
+            "args": {
+              "url": "https://openai.com/blog/gpt-5"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "fetch",
+          "args": {
+            "url": "https://openai.com/blog/gpt-5"
+          },
+          "result": {
+            "tool": "read_url",
+            "url": "https://openai.com/blog/gpt-5",
+            "items": [
+              {
+                "title": "OpenAI",
+                "url": "https://openai.com/blog/gpt-5",
+                "source": "openai.com",
+                "summary": "OpenAI\n\n# 404\n\nThe index rests now\n\nQuiet shelves hold their places\n\nChoose another book\n\nby [gpt-5.6-sol(opens in a new window)](https://chatgpt.com/?model=gpt-5.6-sol&openaicom-did=7a141251-4857-4d8f-b647-2185b2604f77&openaicom_referred=true)"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R05_limit_arg",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "arg_limit",
+        "difficulty": "easy",
+        "what_it_tests": "Trích đúng limit=10 từ '10 tweet'."
+      },
+      "input": "Lấy 10 tweet mới nhất của Elon Musk",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "screenname": "elonmusk",
+              "limit": 10
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "limit": 10,
+              "screenname": "elonmusk"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "timeline",
+          "args": {
+            "limit": 10,
+            "screenname": "elonmusk"
+          },
+          "result": {
+            "tool": "get_user_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/timeline.php?screenname=elonmusk"
+          }
+        }
+      ]
+    },
+    {
+      "id": "R06_timeframe_arg",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "arg_timeframe",
+        "difficulty": "medium",
+        "what_it_tests": "'tuần này' → timeframe=week."
+      },
+      "input": "Tin công nghệ trong tuần này",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "topic": "news",
+              "timeframe": "week"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "tin công nghệ tuần này",
+              "timeframe": "week",
+              "topic": "news"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "tin công nghệ tuần này",
+            "timeframe": "week",
+            "topic": "news"
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "tin công nghệ tuần này",
+            "topic": "news",
+            "timeframe": "week",
+            "items": [
+              {
+                "title": "Điểm tin thị trường hôm nay: Giá dầu gây áp lực lên nhóm cổ phiếu công nghệ, lo ngại về Google Cloud vẫn hiện hữu, Tesla bị bán tháo",
+                "url": "https://www.tradingkey.com/vn/analysis/stocks/chung-khoan-my/262048258-recap-google-tesla-tradingkey",
+                "source": "tradingkey.com",
+                "summary": "Chỉ số trung bình công nghiệp Dow Jones tăng khoảng 600 điểm, nhờ vào kết quả kinh doanh khả quan của các doanh nghiệp, giá dầu giảm và sự lun chuyển nhóm ngành từ lĩnh vực bán dẫn sang các lĩnh vực khác. Các cổ phiếu bộ nhớ và chip nới rộng đà giảm của ngày hôm qua, trong khi nhóm cổ phiếu phần mềm đã phục hồi. Các nhà đầu tư hiện đang tập trung vào quyết định lãi suất của Cục Dự trữ Liên bang (Fed) vào ngày mai và các báo cáo kết quả kinh doanh ngành công nghệ dự kiến công bố trong tuần này. [...] tiền mã hóa đã trở thành một điểm tranh chấp chính trong các cuộc đàm phán. Cuộc bỏ phiếu có thể diễn ra trong vòng hai tuần tới, sau đó Thượng viện sẽ bước vào kỳ nghỉ tháng Tám. [...] IBM(IBM) báo cáo doanh thu quý II chỉ tăng vỏn vẹn 1% và hạ dự báo cả năm. Doanh thu đạt 17,2 tỷ USD và lợi nhuận điều chỉnh trên mỗi cổ phiếu đạt 2,93 USD, cả hai đều thấp hơn kỳ vọng. Doanh số bán máy tính lớn (mainframe) dòng Z giảm mạnh 42%, kéo mảng kinh doanh cơ sở hạ tầng giảm 7%. Mảng kinh doanh phần mềm vẫn tương đối vững chắc, tăng trưởng 5%. Do công ty đã đưa ra cảnh báo về lợi nhuận từ một tuần trước đó, giá cổ phiếu của hãng thực tế đã tăng khoảng 3% trong phiên giao dịch ngoài",
+                "score": 0.7159213
+              },
+              {
+                "title": "Vụ 'nổi loạn' từ OpenAI: Mối lo thật sự hay chiêu trò truyền thông?",
+                "url": "https://www.bbc.com/vietnamese/articles/cedjy9gd8qwo",
+                "source": "bbc.com",
+                "summary": "# Vụ 'nổi loạn' từ OpenAI: Mối lo thật sự hay chiêu trò truyền thông?\n\nOpenAI \n\nNguồn hình ảnh, Getty Images\n\nTuần này, thế giới công nghệ xôn xao trước một câu chuyện hội tụ đủ mọi yếu tố – và khởi đầu như một bộ phim khoa học viễn tưởng.\n\nHugging Face – một dạng cửa hàng ứng dụng dành cho các công cụ trí tuệ nhân tạo (AI) – thông báo vào ngày 16/7 rằng họ đã bị tin tặc tấn công bằng một AI cực mạnh.",
+                "score": 0.6396691
+              },
+              {
+                "title": "Giới đầu tư đề cao sự an toàn",
+                "url": "https://m.tinnhanhchungkhoan.vn/gioi-dau-tu-de-cao-su-an-toan-post394584.amp",
+                "source": "m.tinnhanhchungkhoan.vn",
+                "summary": "\"Đy là một tuần quyết định đối với cổ phiếu công nghệ. Tôi lo lắng về tuần này hơn bất cứ điều gì khác vì nếu Microsoft, Meta và Amazon không bắt đầu thông báo cho nhà đầu tư khi nào họ sẽ kiếm được lợi nhuận từ các khoản đầu tư vốn khổng lồ cho AI, thì sẽ có vấn đề”, Christian Fromhertz, CEO của The Tribeca Trade Group, cho biết. [...] Chứng khoán chu u tăng nhẹ, khi áp lực bán ở cổ phiếu công nghệ đã kìm hãm đà tăng do diễn biến hạ nhiệt trong cuộc xung đột Mỹ-Iran và giá dầu giảm mạnh.\n\nĐóng cửa, chỉ số STOXX 600 toàn chu u tăng 0,02% lên 644,62 điểm.\n\nTrong đó, nhóm cổ phiếu công nghệ gy sức ép với chỉ số phụ theo dõi ngành này giảm 1,7%, khi ASML mất 8,4%, ASM International giảm 7,1% và BE Semiconductor giảm 9,7%. [...] ## Quốc tế\n\n# Giới đầu tư đề cao sự an toàn\n\n(ĐTCK) Chứng khoán Mỹ có thêm một phiên diễn biến trái chiều vào thứ Hai ngày 27/7, khi các nhà đầu tư vẫn cảnh giác với biến động ở Trung Đông và chờ đợi báo cáo kết quả kinh doanh quý vừa qua từ các công ty công nghệ lớn.\n\nBốn trong số các công ty thuộc nhóm \"Magnificent Seven” của Phố Wall là Microsoft, Amazon.com, Meta (Facebook) và Apple dự kiến sẽ công bố kết quả kinh doanh vào cuối tuần.",
+                "score": 0.6222074
+              },
+              {
+                "title": "Tuần đỏ lửa của chứng khoán: Nhóm công nghệ giảm sâu, VN-Index mất cả trăm điểm",
+                "url": "https://langsontv.vn/news/473/104381/tuan-do-lua-cua-chung-khoan-nhom-cong-nghe-giam-sau-vn-index-mat-ca-tram-diem",
+                "source": "langsontv.vn",
+                "summary": "Trong tuần giao dịch từ ngày 20/7 đến 24/7, cổ phiếu công nghệ trải qua một trong những giai đoạn điều chỉnh mạnh nhất kể từ đầu năm khi áp lực bán gần như chi phối toàn bộ diễn biến của ngành.\n\nTheo dữ liệu thị trường, chỉ số ngành công nghệ giảm từ khoảng 153,94 điểm ở đầu tuần xuống còn 142,54 điểm vào cuối phiên 24/7, tương ứng mất 11,4 điểm, tương đương khoảng 7,4% giá trị chỉ sau 5 phiên giao dịch. [...] Vĩnh Long đẩy mạnh ứng dụng trí tuệ nhn tạo nng cao hiệu quả công tác quản lý hành chính  23.07.2026 | 16:09 PM\n Tiến sĩ David Nghiêm: TMA sẵn sàng đưa Việt Nam lên bản đồ công nghệ ăng-ten toàn cầu  23.07.2026 | 16:22 PM\n Sử dụng UAV giám sát hệ sinh thái ven biển  22.07.2026 | 16:56 PM\n Samsung bất ngờ thất bại đau đớn trước Huawei trong cuộc đua điện thoại gập khiến giới công nghệ ngỡ ngàng  22.07.2026 | 17:07 PM [...] 1. Công nghệ thông tin\n\n## Tuần đỏ lửa của chứng khoán: Nhóm công nghệ giảm su, VN-Index mất cả trăm điểm\n\nChủ nhật, 26.07.2026 | 15:34:54\n\n137 lượt xem\n\nÁp lực bán bao trùm thị trường trong tuần 20 - 24/7 khiến cổ phiếu công nghệ giảm hơn 7%, trong khi VN-Index mất hơn 100 điểm, ghi nhận tuần điều chỉnh mạnh nhất nhiều tháng.\n\nÁp lực bán chưa có dấu hiệu hạ nhiệt trong nhóm cổ phiếu công nghệ",
+                "score": 0.6100127
+              },
+              {
+                "title": "Bản tin thị trường Ấn Độ tuần từ 20/7/2026 - 27/7/2026",
+                "url": "https://moit.gov.vn/tin-tuc/ban-tin-thi-truong-an-do-tuan-tu-20-7-2026-27-7-2026.html",
+                "source": "moit.gov.vn",
+                "summary": "Ấn Độ đang đẩy mạnh hợp tác với Myanmar nhằm bảo đảm nguồn cung đất hiếm và khoáng sản quan trọng phục vụ chiến lược phát triển công nghiệp công nghệ cao. Phát biểu tại Diễn đàn Khai khoáng tổ chức tại Mandalay, Đại sứ Ấn Độ tại Myanmar cho biết hợp tác giữa hai nước trong lĩnh vực khai khoáng đã có nhiều tiến triển đáng kể trong hai năm gần đy. [...] Malaysia khởi xướng điều tra chống bán phá giá đối với mặt hàng thép hợp kim nhôm kẽm có xuất xứ hoặc nhập khẩu từ Việt Nam, Trung Quốc, Đài Loan – Trung Quốc\n\nThông báo đề xuất nhu cầu đặt hàng nhiệm khoa học công nghệ, đổi mới sáng tạo\n\nVăn hóa đọc: Góp phần quan trọng bảo vệ nền tảng tư tưởng của Đảng\n\nĐưa Nghị quyết của Đảng vào cuộc sống từ xy dựng văn hóa doanh nghiệp\n\nNghị quyết số 10-NQ/TW: Bước chuyển quan trọng trong tư duy thu hút FDI [...] Báo cáo ghi nhận hoạt động công nghiệp và dịch vụ đều duy trì ổn định, trong khi thương mại quốc tế tiếp tục tăng trưởng tích cực. Xuất khẩu và nhập khẩu của Ấn Độ trong quý I năm tài chính 2026-2027 đều tăng mạnh, một phần nhờ việc đưa vào thực thi Hiệp định Thương mại và Kinh tế Toàn diện giữa Ấn Độ và Vương quốc Anh cũng như các tiến triển trong đàm phán thương mại với nhiều đối tác khác.",
+                "score": 0.48030865
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R07_search_type_arg",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "arg_search_type",
+        "difficulty": "medium",
+        "what_it_tests": "'phổ biến/top' → search_type=Top (không phải Latest)."
+      },
+      "input": "Cho mình các tweet phổ biến (top) nhất về OpenAI",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "social_search",
+            "args": {
+              "search_type": "Top"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": false,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "limit": 10,
+              "screenname": "OpenAI"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": "missing_tool_call",
+        "failure_type": "wrong_arg_value",
+        "failures": [
+          "missing tool call social_search",
+          "extra tool call timeline"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "timeline",
+          "args": {
+            "limit": 10,
+            "screenname": "OpenAI"
+          },
+          "result": {
+            "tool": "get_user_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/timeline.php?screenname=OpenAI"
+          }
+        }
+      ]
+    },
+    {
+      "id": "R08_out_of_scope",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "out_of_scope",
+        "difficulty": "easy",
+        "what_it_tests": "Câu ngoài phạm vi research → KHÔNG gọi tool, từ chối/định hướng."
+      },
+      "input": "Giải giúp mình bài toán tích phân: nguyên hàm của x^2 là gì?",
+      "expect": {
+        "no_tool": true,
+        "behavior": "refuse"
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": false,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "nguyên hàm của x^2",
+              "topic": "general"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "out_of_scope",
+        "observed_mismatch": "unexpected_tool_call",
+        "failure_type": "out_of_scope",
+        "failures": [
+          "expected no tool call"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "nguyên hàm của x^2",
+            "topic": "general"
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "nguyên hàm của x^2",
+            "topic": "general",
+            "timeframe": "week",
+            "items": [
+              {
+                "title": "Bảng đạo hàm của các hàm số cơ bản (thường gặp)",
+                "url": "https://www.mathvn.com/2013/11/bang-ao-ham-cua-cac-ham-so-co-ban.html",
+                "source": "mathvn.com",
+                "summary": "Nếu y = y(u(x)) thì y'(x) = y'(u) . u'(x). đạo hàm ln đạo hàm của ln, đạo hàm lôgarit, đạo hàm của sin cos tan cot. Xem thêm: 300",
+                "score": 0.20745584
+              },
+              {
+                "title": "(Cơ bản). Khảo sát hàm lượng giác. Cho hàm số f(x) = cos2x ...",
+                "url": "https://www.youtube.com/watch?v=qnEI6Y9YRgw",
+                "source": "youtube.com",
+                "summary": "Cho hàm số f(x) = cos2x + 2x + 1.Xét tính đúng sai các mệnh đề sau: a) f(pi/2) = pi. b) Đạo hàm của hàm số là f'(x) = 2sin2x + 2. c) Nghiệm của phương trình",
+                "score": 0.14673436
+              },
+              {
+                "title": "Theme 9 Nguyên hàm, tích phân hàm phân thức hữu tỉ Buổi 1 ...",
+                "url": "https://www.youtube.com/watch?v=hMOP7oSh9-g",
+                "source": "youtube.com",
+                "summary": "Theme 9 Nguyên hàm, tích phân hàm phân thức hữu tỉ Buổi 1 YouTube mp4 Google Drive. @Khoahocthpt2027No likesNo views5 hours ago",
+                "score": 0.10714773
+              },
+              {
+                "title": "Ôn tập toàn diện kiến thức chương Nguyên hàm. Rèn ...",
+                "url": "https://www.facebook.com/thaythuantoan9/posts/-t%E1%BA%B7ng-mi%E1%BB%85n-ph%C3%AD-%C4%91%E1%BB%81-03-ch%C6%B0%C6%A1ng-nguy%C3%AAn-h%C3%A0m%C4%91%E1%BB%81-03-ch%C6%B0%C6%A1ng-nguy%C3%AAn-h%C3%A0m-ch%C3%ADnh-th%E1%BB%A9c-l%C3%AAn-s%C3%B3n/1094252609831510",
+                "source": "facebook.com",
+                "summary": "TẶNG MIỄN PHÍ – ĐỀ 03 CHƯƠNG NGUYÊN HÀM Đề 03 chương Nguyên hàm chính thức lên sóng! ✨ Nội dung được chọn lọc kỹ lưỡng, bám sát chương trình và giúp",
+                "score": 0.07303915
+              },
+              {
+                "title": "Hai cách để xử lí 1 bài toán. Truyền thống và ghép trục. Các ...",
+                "url": "https://www.facebook.com/anhshipertoan/videos/hai-c%C3%A1ch-%C4%91%E1%BB%83-x%E1%BB%AD-l%C3%AD-1-b%C3%A0i-to%C3%A1n-truy%E1%BB%81n-th%E1%BB%91ng-v%C3%A0-gh%C3%A9p-tr%E1%BB%A5c-c%C3%A1c-b%E1%BA%A1n-xem-ngay-%C4%91%E1%BB%83-n%E1%BA%AFm-c/1058837876738876",
+                "source": "facebook.com",
+                "summary": "Hai cách để xử lí 1 bài toán. Truyền thống và ghép trục. Các bạn xem ngay để nắm chắc bản chất nha.",
+                "score": 0.025606656
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R09_no_tool_capability",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "no_tool_meta",
+        "difficulty": "easy",
+        "what_it_tests": "Câu hỏi meta → trả lời thẳng, KHÔNG gọi tool."
+      },
+      "input": "Bạn là gì và làm được những gì?",
+      "expect": {
+        "no_tool": true,
+        "behavior": "answer_without_tool"
+      },
+      "result": {
+        "passed": false,
+        "failure_type": "provider_error",
+        "case_failure_type": "unnecessary_tool",
+        "observed_mismatch": "provider_error",
+        "failures": [
+          "BadRequestError: Error code: 400 - {'error': {'message': \"Failed to call a function. Please adjust your prompt. See 'failed_generation' for more details.\", 'type': 'invalid_request_error', 'code': 'tool_use_failed', 'failed_generation': '<function=lookup>{\"query\": \"assistant\", \"topic\": \"general\"}'}}"
+        ],
+        "actual_tool_calls": [],
+        "actual_text": null,
+        "routing_correct": false,
+        "args_correct": false
+      },
+      "tool_results": []
+    },
+    {
+      "id": "R10_missing_handle",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "clarify_missing_handle",
+        "difficulty": "medium",
+        "what_it_tests": "Thiếu handle → ask_user, KHÔNG đoán bừa người nào."
+      },
+      "input": "Tóm tắt 5 tweet mới nhất giúp mình",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "text"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": false,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "limit": 5,
+              "screenname": "SamAltman"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "missing_info",
+        "observed_mismatch": "missing_tool_call",
+        "failure_type": "missing_info",
+        "failures": [
+          "missing tool call clarify",
+          "extra tool call timeline"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "timeline",
+          "args": {
+            "limit": 5,
+            "screenname": "SamAltman"
+          },
+          "result": {
+            "tool": "get_user_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/timeline.php?screenname=SamAltman"
+          }
+        }
+      ]
+    },
+    {
+      "id": "R11_missing_url",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "clarify_missing_url",
+        "difficulty": "medium",
+        "what_it_tests": "Nói 'bài này' nhưng không có link → ask_user xin URL."
+      },
+      "input": "Tóm tắt bài viết này hộ mình",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "text"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": false,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "fetch",
+            "args": {
+              "url": "https://vietnamnet.vn/"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "missing_info",
+        "observed_mismatch": "missing_tool_call",
+        "failure_type": "missing_info",
+        "failures": [
+          "missing tool call clarify",
+          "extra tool call fetch"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "fetch",
+          "args": {
+            "url": "https://vietnamnet.vn/"
+          },
+          "result": {
+            "tool": "read_url",
+            "url": "https://vietnamnet.vn/",
+            "items": [
+              {
+                "title": "Tin tức, tin nhanh 24h Việt Nam và thế giới - Báo VietNamNet",
+                "url": "https://vietnamnet.vn/",
+                "source": "vietnamnet.vn",
+                "summary": "Thứ tư, 29/07/2026\n[Xem lịch vạn niên](https://vietnamnet.vn/lich-van-nien)\n\n[![VietNamNet](https://static.vnncdn.net/v1/logo/logoVietnamNet.svg)](https://vietnamnet.vn/ \"Vietnamnet\")\n\n![search icon](https://static.vnncdn.net/v1/icon/search.png)\n\n![search.png](https://static.vnncdn.net/v1/icon/search.png)\n\n- [![](https://vnn-res.vgcloud.vn/ResV9/images/vpremium-menu-logo.svg)](https://vietnamnet.vn/premium \"premium vietnamnet\")\n- [Chính trị](https://vietnamnet.vn/chinh-tri \"Chính trị\")\n- [Thời sự](https://vietnamnet.vn/thoi-su \"Thời sự\")\n- [Kinh doanh](https://vietnamnet.vn/kinh-doanh \"Kinh doanh\")\n- [Dân tộc và Tôn giáo](https://vietnamnet.vn/dan-toc-ton-giao \"Dân tộc và Tôn giáo\")\n- [Thể thao](https://vietnamnet.vn/the-thao \"Thể thao\")\n- [Giáo dục](https://vietnamnet.vn/giao-duc \"Giáo dục\")\n- [Thế giới](https://vietnamnet.vn/the-gioi \"Thế giới\")\n- [Đời sống](https://vietnamnet.vn/doi-song \"Đời sống\")\n- [Văn hóa - Giải trí](https://vietnamnet.vn/van-hoa-giai-tri \"Văn hóa - Giải trí\")\n- [Sức khỏe](https://vietnamnet.vn/suc-khoe \"Sức khỏe\")\n- [Công nghệ](https://vietnamnet.vn/cong-nghe \"Công nghệ\")\n- [Ô tô xe máy](https://vietnamnet.vn/oto-xe-may \"Ô tô xe máy\")\n- [Du lịch](https://vietnamnet.vn/du-lich \"Du lịch\")\n- [Bất động sản](https://vietnamnet.vn/bat-dong-san \"Bất động sản\")\n- [Bạn đọc](https://vietnamnet.vn/ban-doc \"Bạn đọc\")\n- [Tuần Việt Nam](https://vietnamnet.vn/tuan-viet-nam \"Tuần Việt Nam\")\n- [Công nghiệp hỗ trợ](https://vietnamnet.vn/hop-tac/cong-nghiep-ho-tro \"Công nghiệp hỗ trợ\")\n- [Giảm nghèo bền vững](https://giamngheobenvung.vietnamnet.vn/ \"Giảm nghèo bền vững\")\n- [Nông thôn mới](https://vietnamnet.vn/nong-thon-moi \"Nông thôn mới\")\n- [Dân tộc thiểu số và miền núi](https://vietnamnet.vn/dan-toc-thieu-so-va-mien-nui \"Dân tộc thiểu số và miền núi\")\n- [Nội dung chuyên đề](https://vietnamnet.vn/noi-dung-chuyen-de \"Nội dung chuyên đề\")\n- [English](https://vietnamnet.vn/en \"English\")\n- [Đính chính](https://vietnamnet.vn/dinh-chinh \"Đính chính\")\n\n- Cơ quan chủ quản: Bộ Dân tộc và Tôn giáo\n- Số giấy phép: 146/GP-BVHTTDL, cấp ngày 17/10/2025\n- Tổng biên tập: Nguyễn Văn Bá\n\n- Địa chỉ: Tầng 18, Toà nhà Cục Viễn thông (VNTA), 68 Dương Đình Nghệ, phường Cầu Giấy, TP. Hà Nội.\n\n- Điện thoại: 02439369898 \\-\nHotline: 0923457788\n- Email: vietnamnet@vietnamnet.vn\n- © 1997 Báo VietNamNet. All rights reserved.\n- Chỉ được phát hành lại thông tin từ website này khi có sự đồng ý bằng văn bản của báo\nVietNamNet.\n\n- Công ty Cổ phần Truyền thông VietNamNet\n- Hotline: 0919 405 885 (Hà Nội) \\-\n0919 435 885 (Tp.HCM)\n- Email: contact@vietnamnet.vn\n- Hỗ trợ kỹ thuật: support@tech.vietnamnet.vn\n\n- [Talks](https://vietnamnet.vn/talkshow)\n- [Hồ sơ](https://vietnamnet.vn/ho-so)\n- [Ảnh](https://vietnamnet.vn/anh)\n- [Video](https://vietnamnet.vn/video)\n- [Multimedia](https://vietnamnet.vn/multimedia)\n- [Podcast](https://vietnamnet.vn/podcast)\n- [24h qua](https://vietnamnet.vn/tin-tuc-24h)\n\n- [Tuyến bài](https://vietnamnet.vn/tuyen-bai)\n- [Sự kiện nóng](https://vietnamnet.vn/su-kien)\n\n- [Liên hệ tòa soạn](https://vietnamnet.vn/thong-tin-toa-soan \"Liên hệ tòa soạn\")\n- [Liên hệ quảng cáo](https://vads.vn/ \"Liên hệ quảng cáo\")\n\n- [![download app](https://static.vnncdn.net/v1/icon/tai-app.svg)](https://vietnamnet.vn/download-app)\n- [Độc giả gửi bài](https://vietnamnet.vn/doc-gia-gui-bai \"Liên hệ tòa soạn\")\n- [Tuyển dụng](https://vietnamnet.vn/tuyen-dung \"Tuyển dụng\")\n- [Lịch vạn niên](https://vietnamnet.vn/lich-van-nien \"Lịch vạn niên\")\n\n[![Trồng cây có lãi gấp 10 lần cây ngô, mở lối thoát nghèo trên cao nguyên đá](https://static-images.vnncdn.net/vps_images_publish/000001/000003/2026/7/28/bapcaicaonguyenda-1232.jpg?width=260&s=nZ-d_8mHXBQYIxuras3wZg)](https://vietnamnet.vn/trong-cay-co-lai-gap-10-lan-cay-ngo-mo-loi-thoat-ngheo-tren-cao-nguyen-da-2519545.html \"Trồng cây có lãi gấp 10 lần cây ngô, mở lối thoát nghèo trên cao nguyên đá\")\n\n[Dân tộc và Tôn giáo](https://vietnamnet.vn/dan-toc-ton-giao \"Dân tộc và Tôn giáo\")\n\n### [Trồng cây có lãi gấp 10 lần c"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R12_confirm_before_send",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "confirm_before_write",
+        "difficulty": "medium",
+        "what_it_tests": "Hành động ghi (gửi) → xác nhận trước (ask_user yes_no), không tự gửi."
+      },
+      "input": "Đăng bản tin này lên Telegram giúp mình",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "yes_no"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": false,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "send",
+            "args": {
+              "confirmed": true,
+              "text": "Bản tin mới: [đăng bản tin lên Telegram]"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_boundary",
+        "observed_mismatch": "missing_tool_call",
+        "failure_type": "wrong_boundary",
+        "failures": [
+          "missing tool call clarify",
+          "extra tool call send"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "send",
+          "args": {
+            "confirmed": true,
+            "text": "Bản tin mới: [đăng bản tin lên Telegram]"
+          },
+          "result": {
+            "tool": "send_telegram",
+            "error": "RuntimeError",
+            "message": "Missing TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID env var"
+          }
+        }
+      ]
+    },
+    {
+      "id": "R13_parallel_web_and_tweets",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "parallel_tool_calls",
+        "difficulty": "hard",
+        "what_it_tests": "Một request cần hai nguồn → gọi cả web_search và search_tweets; eval không phụ thuộc thứ tự tool call."
+      },
+      "input": "Tìm trên web tin AI hôm nay và tìm thêm tweet về AI.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "AI",
+              "topic": "news",
+              "timeframe": "day"
+            }
+          },
+          {
+            "name": "social_search",
+            "args": {
+              "query": "AI"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": true,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "tin AI hôm nay",
+              "timeframe": "day",
+              "topic": "news"
+            }
+          },
+          {
+            "name": "social_search",
+            "args": {
+              "query": "AI",
+              "search_type": "Latest"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": "wrong_arg_value",
+        "failure_type": "wrong_tool",
+        "failures": [
+          "query: expected 'AI', got 'tin AI hôm nay'"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "tin AI hôm nay",
+            "timeframe": "day",
+            "topic": "news"
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "tin AI hôm nay",
+            "topic": "news",
+            "timeframe": "day",
+            "items": [
+              {
+                "title": "Điểm tin thị trường hôm nay: Vốn hóa Apple lần đầu vượt mốc 5 nghìn tỷ USD, lợi nhuận Q2 của SK Hynix tăng vọt 557%",
+                "url": "https://www.tradingkey.com/vn/analysis/stocks/chung-khoan-my/262059792-us-oil-apple-skhy-nvda-skhynix-q2-tradingkey",
+                "source": "tradingkey.com",
+                "summary": "Amazon （AMZN） đang cải tổ toàn diện chiến lược AI của mình, loại bỏ hầu hết các mô hình chủ lực và đặt cược vào Nghiên cứu Mô hình Tiên phong (FMR). Theo các báo cáo truyền thông, Amazon đang tiến hành cải tổ toàn diện chiến lược AI của mình, loại bỏ dần hầu hết các mô hình nội bộ, tái cấu trúc các đội ngũ và hướng các kỹ sư tập trung vào một chiến lược mới nhằm tiên phong trong các lĩnh vực tiên tiến — Nghiên cứu Mô hình Tiên phong (FMR). Các nguồn tin thn cận tiết lộ rằng Amazon đang khai tử [...] Apple có kế hoạch thm nhập thị trường nhà thông minh toàn cầu, lấy trợ lý AI Siri làm cốt lõi. Một đối thủ nặng ký đang bước vào đấu trường nhà thông minh. Nhà phn tích Mark Gurman của Apple báo cáo rằng Apple đang chuẩn bị cho một đợt thúc đẩy mạnh mẽ vào thị trường nhà thông minh toàn cầu, với thiết bị trung tm nhà thông minh được xy dựng xoay quanh trợ lý AI Siri hoàn toàn mới làm cốt lõi. Theo các nguồn tin thn cận, Apple cũng lên kế hoạch phát hành một đầu thu truyền hình TV mới và một loa [...] tradingkey.logo\n\nTìm kiếm\n\nThị trường\n\nDanh sách theo dõi\n\nTin tức\n\nPhn tích\n\nCông cụ\n\nMáy quét cổ phiếu\n\n\n\nQuét để Tải xuống\n\nMột điểm số quyền lực. Quyết định đầu tư thông minh hơn.\n\n\n\nTradingKey\n\nTác giảJay Qian\n\n29 Th07 2026 00:54\n\nPodcast AI\n\nfacebooktwitterlinkedin\n\nXem tất cả bình luận（0）\n\n",
+                "score": 0.6271529
+              },
+              {
+                "title": "Tin tức thời tiết hôm nay 29/7/2026: Nhiều nơi tiếp tục mưa to và dông",
+                "url": "https://nongnghiepmoitruong.vn/tin-tuc-thoi-tiet-hom-nay-29-7-2026-nhieu-noi-tiep-tuc-mua-to-va-dong-d823610.html",
+                "source": "nongnghiepmoitruong.vn",
+                "summary": "Lm Đồng ghi nhận 84 người nhập viện nghi ngộ độc thực phẩm sau khi ăn bánh mì tại xã Nam Ban Lm Hà, 39 người đã xuất viện, không có trường hợp trở nặng.\n Khoa học công nghệ thúc đẩy ứng dụng AI trong báo chí\n\n  Khoa học công nghệ thúc đẩy ứng dụng AI trong báo chí\n\n  Đời sống  28/07/2026 - 18:58 [...] Sở Văn hóa, Thể thao và Du lịch phối hợp với Sở Khoa học và Công nghệ tại Điện Biên tập huấn ứng dụng AI cho 80 học viên cơ quan báo chí, truyền thông.\n Ca phẫu thuật 'kép' cứu sản phụ mang khối u lớn tại đảo Ngọc\n\n  Ca phẫu thuật 'kép' cứu sản phụ mang khối u lớn tại đảo Ngọc\n\n  Đời sống  28/07/2026 - 18:54 [...] Khu vực Bắc Trung Bộ (từ Thanh Hóa - Huế), tin tức thời tiết hôm nay sẽ có my, có mưa rào và dông rải rác, cục bộ có nơi mưa to. Phía Bắc gió nhẹ, phía Nam gió ty nam cấp 2-3. Trong mưa dông có thể xảy ra lốc, sét, mưa đá và gió giật mạnh. Nhiệt độ thấp nhất từ 24-27 độ C. Nhiệt độ cao nhất từ 31-34 độ C.",
+                "score": 0.5441965
+              },
+              {
+                "title": "Cramer nhận thấy dấu hiệu bong bóng dot-com khi phố Wall rút khỏi cổ phiếu AI để tìm sự an toàn",
+                "url": "https://vn.beincrypto.com/cramer-warns-ai-stocks-dot-com",
+                "source": "vn.beincrypto.com",
+                "summary": "Thời điểm hiện tại khá nhạy cảm. Seagate vừa công bố kết quả kinh doanh vượt kỳ vọng sau phiên giao dịch ngày thứ Ba. Cục Dự trữ Liên bang Mỹ cũng sẽ công bố quyết định về lãi suất trong ngày hôm nay. Cả hai sự kiện lớn này đều có thể ảnh hưởng đến nhóm cổ phiếu trung tâm dữ liệu. Trong thời gian tới, nhà đầu tư sẽ nhận thấy liệu nhóm này có ổn định trở lại, hay dòng tiền sẽ tiếp tục đổ về các cổ phiếu mà Cramer cho là “có vẻ nhàm chán nhưng an toàn”. [...] Làn sóng giảm giá mạnh nhất lại diễn ra ở thị trường châu Á. Chỉ số KOSPI Hàn Quốc đã mất hơn 10% trong tuần này. SK Hynix và Samsung Electronics đồng loạt giảm theo các đối thủ Mỹ. Những khó khăn trong chuỗi cung ứng AI đang là nguyên nhân lớn khiến thị trường rơi vào trạng thái “gấu”.\n\n## Cramer gọi đó là sự mở rộng, không phải sụp đổ [...] Xu hướng này phản ánh trực tiếp trên bảng điện. Giá các cổ phiếu Coca-Cola, PepsiCo và Walmart đều tăng mạnh. Chỉ số Dow Jones Industrial Average tăng trong khi Nasdaq Composite lại đi xuống. Nhà quản lý quỹ Steve Eisman cũng đã chỉ ra sự phân hóa này và cảnh báo thị trường ngày nay đang vận hành như một “kèo AI” tập trung duy nhất.",
+                "score": 0.4296453
+              },
+              {
+                "title": "Áp thấp nhiệt đới vào Biển Đông",
+                "url": "https://hatinh.gov.vn/vi/bai-viet/ap-thap-nhiet-doi-vao-bien-dong",
+                "source": "hatinh.gov.vn",
+                "summary": "#### Cấm nhập khẩu thuốc lá điện tử và hàng hóa từ lao động cưỡng bức\n\n24/07/2026\n\nÁp thấp nhiệt đới có khả năng mạnh lên thành bão trong 24 giờ tới\n\n#### Áp thấp nhiệt đới có khả năng mạnh lên thành bão trong 24 giờ tới\n\n23/07/2026\n\nHà Nội nghiên cứu mô hình khu dịch vụ giải trí đêm có kiểm soát\n\n#### Hà Nội nghiên cứu mô hình khu dịch vụ giải trí đêm có kiểm soát\n\n23/07/2026\n\nHà Tĩnh\n\n## Hỏi đáp AI\n\nTra cứu tin bài và văn bản",
+                "score": 0.3941782
+              },
+              {
+                "title": "Giá vàng hôm nay 28/7: Dừng lao dốc, chờ tín hiệu phục hồi",
+                "url": "https://vietnamfinance.vn/gia-vang-hom-nay-28-7-dung-lao-doc-cho-tin-hieu-phuc-hoi-d148258.html",
+                "source": "vietnamfinance.vn",
+                "summary": "Tin khác\n\n    PNJ mua lại 5.900 tỷ đồng trang sức chỉ trong 20 ngày\n\n## PNJ mua lại 5.900 tỷ đồng trang sức chỉ trong 20 ngày\n\n(VNF) - PNJ điều chỉnh chính sách thu đổi sau làn sóng bán lại trang sức tăng đột biến.\n\nVincom Retail củng cố nội lực, tăng tốc trong kỷ nguyên bán lẻ mới\n\n### Vincom Retail củng cố nội lực, tăng tốc trong kỷ nguyên bán lẻ mới\n\nVingroup tăng tốc đào tạo 20.000 nhn tài AI thực chiến\n\n### Vingroup tăng tốc đào tạo 20.000 nhn tài AI thực chiến [...] Vincom Retail củng cố nội lực, tăng tốc trong kỷ nguyên bán lẻ mới\n\n### Vincom Retail củng cố nội lực, tăng tốc trong kỷ nguyên bán lẻ mới\n\nVingroup tăng tốc đào tạo 20.000 nhn tài AI thực chiến\n\n### Vingroup tăng tốc đào tạo 20.000 nhn tài AI thực chiến\n\nVừa tăng trưởng, vừa trả cổ tức: Lợi thế cạnh tranh của Masan Consumer\n\n### Vừa tăng trưởng, vừa trả cổ tức: Lợi thế cạnh tranh của Masan Consumer\n\nGiá trần phát điện nhiệt điện khí tăng lên hơn 3.410 đồng/kWh",
+                "score": 0.37100044
+              }
+            ]
+          }
+        },
+        {
+          "tool": "social_search",
+          "args": {
+            "query": "AI",
+            "search_type": "Latest"
+          },
+          "result": {
+            "tool": "search_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/search.php?query=AI&search_type=Latest"
+          }
+        }
+      ]
+    },
+    {
+      "id": "R14_out_of_scope_coding",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "out_of_scope_coding",
+        "difficulty": "easy",
+        "what_it_tests": "Câu coding ngoài phạm vi research/news → KHÔNG gọi tool."
+      },
+      "input": "Viết giúp mình một hàm Python tính Fibonacci bằng recursion.",
+      "expect": {
+        "no_tool": true,
+        "behavior": "refuse"
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": false,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "Fibonacci recursion Python",
+              "topic": "general"
+            }
+          },
+          {
+            "name": "format",
+            "args": {
+              "headline": "Hàm Fibonacci bằng recursion",
+              "items": [
+                {
+                  "section": "Python",
+                  "source": "GeeksforGeeks",
+                  "summary": "Hàm Fibonacci bằng recursion",
+                  "title": "Fibonacci",
+                  "url": "https://www.geeksforgeeks.org/program-for-nth-fibonacci-number/"
+                }
+              ],
+              "template": "brief"
+            }
+          },
+          {
+            "name": "send",
+            "args": {
+              "text": "def fibonacci(n):\n    if n <= 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "out_of_scope",
+        "observed_mismatch": "unexpected_tool_call",
+        "failure_type": "out_of_scope",
+        "failures": [
+          "expected no tool call"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "Fibonacci recursion Python",
+            "topic": "general"
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "Fibonacci recursion Python",
+            "topic": "general",
+            "timeframe": "week",
+            "items": [
+              {
+                "title": "15 How Recursive Fibonacci Works in Python",
+                "url": "https://www.youtube.com/watch?v=irIFdsXl4qk",
+                "source": "youtube.com",
+                "summary": "In this tutorial, we walk through the internal working of a recursive Fibonacci program in Python using the example `fib(3)`.",
+                "score": 0.82560414
+              },
+              {
+                "title": "Recursion CBSE Class 12 | PDF",
+                "url": "https://www.slideshare.net/slideshow/recursion-cbse-class-12/238358235",
+                "source": "slideshare.net",
+                "summary": "● 1st Fibonacci number = 0 (by assumption)\n● 2nd Fibonacci number = 1 (by assumption)\n● 3rd Fibonacci number = 1st + 2nd\n= 0 + 1\n= 1\n● 4th Fibonacci number = 2nd + 3rd\n= 1 + 1\n= 2\n● 5th Fibonacci number = 3rd + 4th\n= 1 + 2\n= 3\n● 6th Fibonacci number = 4th + 5th\n= 2 + 3\n= 5\n \nIterative binary\nsearch\n \nRecursive\nbinary search\n \nGVK CHINMAYA VIDYALAYA\nSENIOR SECONDARY SCHOOL\nKothuru, Indukurupet, SPS Nellore\nRecursion\nClass: 12 Subject: Python Teacher: C Vijaya\nB.Tech, MBA\n \nWhat is recursion? [...] Example of Recursion\n# This is python program to print\na pattern\n \nExample of Recursion Def steps(1):\nif(true):\nx=1\nwhile(true):\nprint(1)\nx=2\na=2\nsteps(2)\nDef steps(2):\nif(true):\nx=1\nwhile(true):\nprint(1)\nx=2\nwhile(true)\nprint(2)\nx=3\na=3\nsteps(3)\nDef steps(3):\nif(true)\nx=1\nwhile(true):\nprint(1)\nx=2\nWhile (true)\nprint(2)\nPython Program to\nprint pattern\n \nRecursion refers to a programming technique in which a function calls itself either\ndirectly or indirectly [...] Example of Recursion\n# This is python program to print\na pattern\n \nExample of Recursion Def steps(1):\nif(true):\nx=1\nwhile(true):\nprint(1)\nx=2\na=2\nsteps(2)\nDef steps(2):\nif(true):\nx=1\nwhile(true):\nprint(1)\nx=2\nwhile(true)\nprint(2)\nx=3\na=3\nsteps(3)\nDef steps(3):\nif(true)\nx=1\nwhile(true):\nprint(1)\nx=2\nWhile (true)\nprint(2)\nPython Program to\nprint pattern\n \nRecursion refers to a programming technique in which a function calls itself either\ndirectly or indirectly",
+                "score": 0.7500592
+              },
+              {
+                "title": "15-Recursion in Python Explained",
+                "url": "https://www.youtube.com/watch?v=GtJAFeA411w",
+                "source": "youtube.com",
+                "summary": "In this video, you'll learn what recursion is, how recursive functions work, the base case, recursive case, and when to use recursion in Python.",
+                "score": 0.24076162
+              },
+              {
+                "title": "16 Iteration vs Recursion in Python | Key Differences ...",
+                "url": "https://www.youtube.com/watch?v=U6gZygzKmhM",
+                "source": "youtube.com",
+                "summary": "In this Python tutorial, we compare Iteration vs Recursion and understand the key differences between these two important problem-solving techniques.",
+                "score": 0.1509655
+              },
+              {
+                "title": "What actually made recursion click for you? (not looking for ...",
+                "url": "https://www.reddit.com/r/learnpython/comments/1v3f8wk/what_actually_made_recursion_click_for_you_not",
+                "source": "reddit.com",
+                "summary": "I got properly stuck on recursion. Watched several videos, read through it in the resources I was already working from. The explanations all made sense",
+                "score": 0.059128825
+              }
+            ]
+          }
+        },
+        {
+          "tool": "format",
+          "args": {
+            "headline": "Hàm Fibonacci bằng recursion",
+            "items": [
+              {
+                "section": "Python",
+                "source": "GeeksforGeeks",
+                "summary": "Hàm Fibonacci bằng recursion",
+                "title": "Fibonacci",
+                "url": "https://www.geeksforgeeks.org/program-for-nth-fibonacci-number/"
+              }
+            ],
+            "template": "brief"
+          },
+          "result": {
+            "tool": "render_digest",
+            "template": "brief",
+            "markdown": "**Hàm Fibonacci bằng recursion**\n\n- Hàm Fibonacci bằng recursion - [GeeksforGeeks](https://www.geeksforgeeks.org/program-for-nth-fibonacci-number/)",
+            "item_count": 1
+          }
+        },
+        {
+          "tool": "send",
+          "args": {
+            "text": "def fibonacci(n):\n    if n <= 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)"
+          },
+          "result": {
+            "tool": "send_telegram",
+            "status": "needs_confirmation",
+            "message": "Only send after the user explicitly confirms."
+          }
+        }
+      ]
+    },
+    {
+      "id": "M01_clarify_then_fill",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": true,
+      "metadata": {
+        "skill": "multiturn_clarify_fill",
+        "difficulty": "hard",
+        "what_it_tests": "3 turns: carry limit=5 từ lượt 1 + map tên Elon Musk thành handle elonmusk từ lượt 2."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tóm tắt 5 tweet mới nhất giúp mình"
+        },
+        {
+          "role": "user",
+          "content": "Của Elon Musk nhé"
+        },
+        {
+          "role": "user",
+          "content": "Giữ đúng 5 tweet, đừng đổi số lượng"
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "screenname": "elonmusk",
+              "limit": 5
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "limit": 5,
+              "screenname": "elonmusk"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "missing_info",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "timeline",
+          "args": {
+            "limit": 5,
+            "screenname": "elonmusk"
+          },
+          "result": {
+            "tool": "get_user_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/timeline.php?screenname=elonmusk"
+          }
+        }
+      ]
+    },
+    {
+      "id": "M02_carryover_timeframe",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": true,
+      "metadata": {
+        "skill": "multiturn_carryover",
+        "difficulty": "hard",
+        "what_it_tests": "3 turns: chỉ xử lý latest turn, carry timeframe=day và topic=news, query robotics."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tin AI hôm nay có gì?"
+        },
+        {
+          "role": "user",
+          "content": "Còn về robotics thì sao?"
+        },
+        {
+          "role": "user",
+          "content": "Chỉ tìm robotics thôi, vẫn là tin hôm nay"
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "robotics",
+              "topic": "news",
+              "timeframe": "day"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": false,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "screenname": "robotics_news"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": "missing_tool_call",
+        "failure_type": "wrong_arg_value",
+        "failures": [
+          "missing tool call lookup",
+          "extra tool call timeline"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "timeline",
+          "args": {
+            "screenname": "robotics_news"
+          },
+          "result": {
+            "tool": "get_user_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/timeline.php?screenname=robotics_news"
+          }
+        }
+      ]
+    },
+    {
+      "id": "M03_correction_handle",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": true,
+      "metadata": {
+        "skill": "multiturn_correction",
+        "difficulty": "hard",
+        "what_it_tests": "3 turns: map tên thường, sửa Sam Altman→Andrej Karpathy, dùng handle karpathy và limit=3."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tweet mới nhất của Sam Altman"
+        },
+        {
+          "role": "user",
+          "content": "À nhầm, của Andrej Karpathy"
+        },
+        {
+          "role": "user",
+          "content": "Lấy 3 tweet mới nhất nhé"
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "screenname": "karpathy",
+              "limit": 3
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": true,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "limit": 3,
+              "screenname": "Andrej Karpathy"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": "wrong_arg_value",
+        "failure_type": "wrong_arg_value",
+        "failures": [
+          "screenname: expected 'karpathy', got 'Andrej Karpathy'"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "timeline",
+          "args": {
+            "limit": 3,
+            "screenname": "Andrej Karpathy"
+          },
+          "result": {
+            "tool": "get_user_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/timeline.php?screenname=Andrej+Karpathy"
+          }
+        }
+      ]
+    },
+    {
+      "id": "M04_clarify_then_url",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": true,
+      "metadata": {
+        "skill": "multiturn_clarify_url",
+        "difficulty": "medium",
+        "what_it_tests": "3 turns: sau khi được cung cấp URL, latest turn xác nhận chỉ đọc link đó → read_url đúng url."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tóm tắt bài này hộ mình"
+        },
+        {
+          "role": "user",
+          "content": "https://anthropic.com/news/claude"
+        },
+        {
+          "role": "user",
+          "content": "Chỉ đọc đúng link đó thôi"
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "fetch",
+            "args": {
+              "url": "https://anthropic.com/news/claude"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "fetch",
+            "args": {
+              "url": "https://anthropic.com/news/claude"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "missing_info",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "fetch",
+          "args": {
+            "url": "https://anthropic.com/news/claude"
+          },
+          "result": {
+            "tool": "read_url",
+            "url": "https://anthropic.com/news/claude",
+            "items": [
+              {
+                "title": "Not Found \\ Anthropic",
+                "url": "https://anthropic.com/news/claude",
+                "source": "anthropic.com",
+                "summary": "A 404 poem by Claude Haiku 4.5Claude Sonnet 5Claude Opus 5Claude Fable 5\n\nI dig th"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "M05_correction_limit",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": true,
+      "metadata": {
+        "skill": "multiturn_arg_correction",
+        "difficulty": "hard",
+        "what_it_tests": "3 turns: map tên Elon Musk, carry handle elonmusk, sửa limit 10→3."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Lấy 10 tweet mới nhất của Elon Musk"
+        },
+        {
+          "role": "user",
+          "content": "Cho mình 3 thôi"
+        },
+        {
+          "role": "user",
+          "content": "Vẫn của Elon Musk nhé"
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "screenname": "elonmusk",
+              "limit": 3
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": true,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "limit": 10,
+              "screenname": "elonmusk"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": "wrong_arg_value",
+        "failure_type": "wrong_arg_value",
+        "failures": [
+          "limit: expected 3, got 10"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "timeline",
+          "args": {
+            "limit": 10,
+            "screenname": "elonmusk"
+          },
+          "result": {
+            "tool": "get_user_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/timeline.php?screenname=elonmusk"
+          }
+        }
+      ]
+    },
+    {
+      "id": "M06_switch_tool",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": true,
+      "metadata": {
+        "skill": "multiturn_switch_tool",
+        "difficulty": "hard",
+        "what_it_tests": "3 turns: explicitly bỏ Twitter, chuyển sang web_search news, giữ chủ đề OpenAI."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Mọi người nói gì về OpenAI trên Twitter?"
+        },
+        {
+          "role": "user",
+          "content": "Bỏ Twitter, chuyển sang tìm trên web tin tức đi"
+        },
+        {
+          "role": "user",
+          "content": "Giữ chủ đề OpenAI"
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "OpenAI",
+              "topic": "news"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "OpenAI",
+              "topic": "news"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "OpenAI",
+            "topic": "news"
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "OpenAI",
+            "topic": "news",
+            "timeframe": "week",
+            "items": [
+              {
+                "title": "Man sues OpenAI over 'dangerous' medical advice from ...",
+                "url": "https://www.courthousenews.com/man-sues-openai-over-dangerous-medical-advice-from-chatgpt",
+                "source": "courthousenews.com",
+                "summary": "SAN FRANCISCO — A Florida man who sought health guidance on ChatGPT sued OpenAI Wednesday, claiming the artificial intelligence chatbot gave him dangerously inaccurate medical advice that led him to delay seeking professional treatment for a pulmonary embolism. [...] And Winters wants the court to pause the operation of ChatGPT Health, which OpenAI announced in January as a “a dedicated experience in ChatGPT designed for health and wellness,” unless “independent third parties determine the product to be safe through comprehensive safety audits.\"\n\n“OpenAI cannot continue to treat human welfare as expendable in pursuit of market dominance,” Winters says in the complaint. [...] Winters accuses OpenAI and its CEO, Sam Altman, of prioritizing profit over necessary guardrails and failing to warn users about critical safety concerns of ChatGPT-4o to secure a competitive advantage over other competitors in the AI industry.",
+                "score": 0.60077465
+              },
+              {
+                "title": "OpenAI admits its agent went rogue, triggering a major hack",
+                "url": "https://www.scientificamerican.com/article/openai-admits-its-agent-went-rogue-and-hacked-ai-startup-hugging-face",
+                "source": "scientificamerican.com",
+                "summary": "The OpenAI admission was announced after Hugging Face said in a blog post last week that it had been targeted in an AI-led attack that was “different from anything we had handled before.” Hugging Face said its own AI had been integral to detecting and investigating the breach. [...] OpenAI said in its post that it would also add more protections to its training environments. “This incident points to the need to further strengthen our model’s alignment, cyber protections during evaluation time, and monitoring during internal testing,” the company wrote.\n\nTorr says some companies may not have been as forthcoming as OpenAI and Hugging Face, adding that independent AI safety research is increasingly crucial as time goes on. [...] An OpenAI autonomous agent went rogue and hacked into another artificial intelligence start-up’s infrastructure, the ChatGPT maker said in a blog post.",
+                "score": 0.5737984
+              },
+              {
+                "title": "Its AI agent spent days hacking a company, but sources say OpenAI ...",
+                "url": "https://www.reuters.com/business/its-ai-agent-spent-days-hacking-company-sources-say-openai-did-not-notice-week-2026-07-24",
+                "source": "reuters.com",
+                "summary": "Four people familiar with OpenAI’s model-training practices say the company often runs several different model ​evaluations at the same time, all of which operate at high speeds and generate such enormous amounts of data that employees sometimes struggle to keep up.\n\nBy the time ​OpenAI alerted Hugging Face, the ⁠AI library had already called the FBI to report the hack, according to a person familiar with the matter. Reuters could not establish whether the bureau had opened an investigation. [...] The FBI declined to comment about the incident.\n\nThe incident, which evoked science fiction scenarios about humans losing control of dangerous AI systems, comes at a delicate ​time for OpenAI, the company behind ChatGPT. Its executives are preparing for a possible initial public offering that could come as soon as this year to help finance the billions needed to fund its growth in years to come.\n\nAdvertisement · Scroll to continue [...] ### LSEG Products\n\n   #### Workspace, opens new tab\nAccess unmatched financial data, news and content in a highly-customised workflow experience on desktop, web and mobile.\n\n   #### Data Catalogue, opens new tab\nBrowse an unrivalled portfolio of real-time and historical market data and insights from worldwide sources and experts.",
+                "score": 0.57035583
+              },
+              {
+                "title": "How OpenAI Lost Control of an AI Model—and What ...",
+                "url": "https://time.com/article/2026/07/24/openai-hugging-face-attack",
+                "source": "time.com",
+                "summary": "OpenAI was evaluating its artificial intelligence models’ ability to exploit vulnerable software when instead the models hacked the infrastructure surrounding the test, broke containment, and attacked a real company, OpenAI revealed on July 21. Observers say this is the first real-world instance of AI doing something researchers have long worried about: a loss-of-control scenario. If the industry fails to learn from it, it is unlikely to be the last. [...] OpenAI did not respond to TIME’s request for comment, but has said it has partnered with Hugging Face to conduct a thorough investigation and will share more details once complete. But perhaps more worryingly, OpenAI is not legally compelled to disclose the incident in the first place.",
+                "score": 0.5674818
+              },
+              {
+                "title": "How are companies, governments responding to the OpenAI hack?",
+                "url": "https://www.aljazeera.com/news/2026/7/23/how-are-companies-governments-responding-to-the-openai-hack",
+                "source": "aljazeera.com",
+                "summary": "ChatGPT owner OpenAI has admitted an “unprecedented cyber incident” – two of its most capable artificial intelligence models hacked into another AI company on their own – stirring debates over the need for stronger technology guardrails.\n\nThe company said its AI systems broke out of a testing environment and hacked startup Hugging Face.\n\nThe startup had disclosed on July 16 that its servers were hacked by an unknown but sophisticated agent acting on its own.",
+                "score": 0.5194
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
